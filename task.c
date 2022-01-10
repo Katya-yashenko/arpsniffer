@@ -12,6 +12,8 @@
 #include <sys/select.h>
 #include <netdb.h>
 
+#include "oui.h"
+
 #define BUF_SIZE 100
 
 #define IPV4_LENGTH 4
@@ -40,7 +42,34 @@ struct arphdr {
 
 void parse_vendor(uint8_t *mac)
 {
-	printf("Tmp\n");
+    int a = 0;
+    int c;
+    int b = __vendors_size;
+	int cmp;
+    int idx = -1;
+	char first_three_mac_bytes[9]; /* XX:XX:XX + '\0' */
+
+    snprintf(first_three_mac_bytes, 9, "%02X:%02X:%02X",
+             mac[0], mac[1], mac[2]);
+
+    while (a + 1 < b) {
+        c = (a + b) / 2;
+
+        cmp = strncmp(first_three_mac_bytes, __vendors[c][0], 9);
+        if (cmp == 0){
+            idx = c;
+			break;
+		}
+        else if (cmp < 0)
+            b = c;
+        else if (cmp > 0)
+            a = c;
+    }
+
+	if (idx == -1)
+		printf("Vendor undefined\n");
+	else
+        printf("%s\n", __vendors[idx][1]);
 }
 
 int parse_arp(struct arphdr *arp)
